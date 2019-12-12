@@ -12,13 +12,13 @@ password = 123
 Kasir
 
 ```bash
-username = Kasir
+username = kasir
 password = 123
 ```
 
 Pelayan
 
 ```bash
-username = Pelayan
+username = pelayan
 password = 123
 ```
