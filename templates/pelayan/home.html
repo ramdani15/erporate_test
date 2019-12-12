@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div id="app">
+    <a href="{% url 'logout' %}" v-on:click="logout()">Logout</a>
+    <h1 class="text-center">HALAMAN PELAYAN</h1>
+    <hr>
+    <div class="col-lg-12 text-center">
+      <div class="row">
+        <div class="col-lg-6">
+          <h4>Daftar Makanan</h4>
+          <table class="table table-striped table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>NO</th>
+                <th>Nama</th>
+                <th>Harga</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for='(index, m) in makanan'>
+                <td>${index+1}</td>
+                <td>${m.nama}</td>
+                <td>${m.harga}</td>
+                <td>${m.status}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col-lg-6">
+          <h4>Daftar Minuman</h4>
+          <table class="table table-striped table-bordered table-hover">
+            <thead>
+              <tr>
+                <th>NO</th>
+                <th>Nama</th>
+                <th>Harga</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(index, m) in minuman">
+                <td>${index+1}</td>
+                <td>${m.nama}</td>
+                <td>${m.harga}</td>
+                <td>${m.status}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <hr><hr>
+    <div class="col-lg-12 text-center">
+      <h4>Tambah Pesanan</h4>
+      <form v-on:submit.prevent="addPesanan">
+        <label>Nomor Meja</label>
+        <input type="number" v-model="nomor_meja">
+        <button type="submit">Tambahkan</button>
+      </form>
+    </div>
+
+    <hr>
+    <div class="col-lg-12 text-center">
+      <h4>Daftar Pesanan</h4>
+      <table class="table table-striped table-bordered table-hover text-center">
+        <thead>
+          <tr>
+            <th>NO</th>
+            <th>Nomor Meja</th>
+            <th>Kode Pesanan</th>
+            <th>Total Bayar</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(index, p) in pesanan">
+            <td>${index+1}</td>
+            <td>${p.nomor_meja}</td>
+            <td>${p.kode_pesanan}</td>
+            <td>${p.bayar}</td>
+            <td v-if="p.lunas == false">Belum Bayar</td>
+            <td v-if="p.lunas == true">Sudah Bayar</td>
+            <td>
+              <a href="#" v-on:click="detail(p.id)"><button>Detail</button></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+</div>
+
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.28/vue.min.js"></script> -->
+<script type="text/javascript" src="{% static 'js/vue.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/axios.js' %}"></script>
+<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script> -->
+<script type="text/javascript">
+    Vue.config.delimiters = ['${', '}']
+    let url_auth = "/api/auth/";
+    let url_makanan = "/api/makanan/";
+    let url_minuman = "/api/minuman/";
+    let url_pesanan = "/api/pesanan/";
+    let url_daftar_pesanan = "/api/daftar-pesanan/";
+
+    new Vue({
+        el: '#app',
+        data: {
+            message: 'haihai',
+            username: '{{ request.user.username }}',
+            password: '{{ request.session.password }}',
+
+            makanan: [],
+            minuman: [],
+            pesanan: [],
+            daftar_pesanan: []
+        },
+        created(){
+            let data = {
+                username: this.username,
+                password: this.password
+            };
+
+            const self = this;
+            // get token
+            axios.post(url_auth, data)
+              .then(function (response) {
+                window.localStorage.setItem('token', response.data.token);
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+
+            setTimeout(() => {
+              // get list makanan
+              axios.get(url_makanan, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization' : 'JWT ' + window.localStorage.getItem('token')
+                  }
+                })
+                .then(function (response) {
+                  self.makanan = response.data;
+                  console.log(self.makanan);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                })
+                .finally(function () {
+                  
+                });
+
+              // get list minuman
+              axios.get(url_minuman, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization' : 'JWT ' + window.localStorage.getItem('token')
+                  }
+                })
+                .then(function (response) {
+                  self.minuman = response.data;
+                  console.log(self.minuman);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                })
+                .finally(function () {
+                  
+                });
+
+              // get list pesanan
+              axios.get(url_pesanan, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization' : 'JWT ' + window.localStorage.getItem('token')
+                  }
+                })
+                .then(function (response) {
+                  self.pesanan = response.data;
+                  console.log(self.pesanan);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                })
+                .finally(function () {
+                  
+                });
+              }, 1000)
+        },
+        methods: {
+          addPesanan: function(){
+            const self = this;
+            let data = {
+                nomor_meja: this.nomor_meja
+            };
+            fetch(url_pesanan, {
+                  method: 'POST',
+                  body: JSON.stringify(data),
+                  headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': 'JWT ' + window.localStorage.getItem('token')
+                  }
+                }).then(res => res.json())
+                .then(response => {
+                    console.log(response);
+                    self.pesanan.push(response);
+                })
+                .catch(error => console.error('Error:', error));
+          },
+          detail: function(id){
+            window.location.href = '/detail/' + id
+          },
+          logout: function(){
+            window.localStorage.setItem('token', null);
+          }
+        }
+    })
+</script>
+{% endblock%}
+

@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div id="app">
+    <a href="{% url 'logout' %}" v-on:click="logout()">Logout</a>
+    <a href="{% url 'home' %}">Home</a>
+    <h1 class="text-center">DETAIL PESANAN</h1>
+
+    <div class="col-lg-12 text-center">
+      <table class="table table-striped table-bordered table-hover text-center">
+        <thead>
+          <tr>
+            <th>Nomor</th>
+            <th>Nomor Meja</th>
+            <th>Kode Pesanan</th>
+            <th>Total Bayar</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${pesanan.nomor}</td>
+            <td>${pesanan.nomor_meja}</td>
+            <td>${pesanan.kode_pesanan}</td>
+            <td>${pesanan.bayar}</td>
+            <td v-if="pesanan.lunas == false">Belum Bayar</td>
+            <td v-if="pesanan.lunas == true">Sudah Bayar</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Daftar Pesanan</h4>
+      <table class="table table-striped table-bordered table-hover text-center">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Makanan</th>
+            <th>Minuman</th>
+            <th>Jumlah</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(index, dp) in pesanan.daftar_pesanan">
+            <td>${index+1}</td>
+            <td>${this.nama_makanan(dp.makanan)}</td>
+            <td>${this.nama_minuman(dp.minuman)}</td>
+            <td v-if="dp.makanan != null">${dp.makanan_jumlah}</td>
+            <td v-if="dp.minuman != null">${dp.minuman_jumlah}</td>
+            <td>
+              <button v-on:click="delete(dp.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+    <div class="col-lg-12 text-center">
+      <div class="row">
+        <div class="col-lg-6">
+          <form v-on:submit.prevent="addDaftarPesanan">
+            <h4>Daftar Makanan</h4>
+            <table class="table table-striped table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>NO</th>
+                  <th>Nama</th>
+                  <th>Harga</th>
+                  <th>Status</th>
+                  <th>Pesan</th>
+                  <th>Jumlah</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for='(index, m) in makanan'>
+                  <td>${index+1}</td>
+                  <td>${m.nama}</td>
+                  <td>${m.harga}</td>
+                  <td>${m.status}</td>
+                  <td>
+                    <input type="checkbox" id="makanan${m.id}" value="${m.id}" v-model="pesan_makanan">
+                  </td>
+                  <td>
+                    <input type="number" id="makanan_jumlah${m.id}" value=1>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col-lg-6">
+            <h4>Daftar Minuman</h4>
+            <table class="table table-striped table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>NO</th>
+                  <th>Nama</th>
+                  <th>Harga</th>
+                  <th>Status</th>
+                  <th>Pesan</th>
+                  <th>Jumlah</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(index, m) in minuman">
+                  <td>${index+1}</td>
+                  <td>${m.nama}</td>
+                  <td>${m.harga}</td>
+                  <td>${m.status}</td>
+                  <td>
+                    <input type="checkbox" id="minuman${m.id}" value="${m.id}" v-model="pesan_minuman">
+                  </td>
+                  <td>
+                    <input type="number" id="minuman_jumlah${m.id}" value=1>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-lg-12 text-center">
+            <button type="submit">Tambahkan Item Pesanan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+</div>
+
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.28/vue.min.js"></script> -->
+<script type="text/javascript" src="{% static 'js/vue.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/axios.js' %}"></script>
+<!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script> -->
+<script type="text/javascript">
+    Vue.config.delimiters = ['${', '}']
+    let url_auth = "/api/auth/";
+    let url_makanan = "/api/makanan/";
+    let url_minuman = "/api/minuman/";
+    let url_pesanan = "/api/pesanan/{{pesanan_id}}";
+    let url_daftar_pesanan = "/api/daftar-pesanan/";
+
+    new Vue({
+        el: '#app',
+        data: {
+            message: 'haihai',
+            username: '{{ request.user.username }}',
+            password: '{{ request.session.password }}',
+
+            makanan: [],
+            minuman: [],
+            pesanan: [],
+            daftar_pesanan: [],
+
+            pesan_makanan: [],
+            pesan_minuman: [],
+        },
+        created(){
+            let data = {
+                username: this.username,
+                password: this.password
+            };
+
+            const self = this;
+            // get token
+            axios.post(url_auth, data)
+              .then(function (response) {
+                window.localStorage.setItem('token', response.data.token);
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+
+            setTimeout(() => {
+              // get list makanan
+              axios.get(url_makanan, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization' : 'JWT ' + window.localStorage.getItem('token')
+                  }
+                })
+                .then(function (response) {
+                  self.makanan = response.data;
+                  console.log(self.makanan);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                })
+                .finally(function () {
+                  
+                });
+
+              // get list minuman
+              axios.get(url_minuman, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization' : 'JWT ' + window.localStorage.getItem('token')
+                  }
+                })
+                .then(function (response) {
+                  self.minuman = response.data;
+                  console.log(self.minuman);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                })
+                .finally(function () {
+                  
+                });
+
+              // get list pesanan
+              axios.get(url_pesanan, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization' : 'JWT ' + window.localStorage.getItem('token')
+                  }
+                })
+                .then(function (response) {
+                  self.pesanan = response.data;
+                  self.daftar_pesanan = self.pesanan.daftar_pesanan;
+                  console.log(self.pesanan);
+                  // console.log(self.daftar_pesanan);
+                })
+                .catch(function (error) {
+                  console.log(error);
+                })
+                .finally(function () {
+                  
+                });
+            }, 1000)
+        },
+        methods: {
+          addDaftarPesanan: function(){
+            const self = this;
+            // add item makanan
+            if (self.pesan_makanan.length > 0) {
+              for(i=0; i < self.pesan_makanan.length; i++){
+                let jumlah = document.getElementById("makanan_jumlah"+self.pesan_makanan[i]).value;
+                let data = {
+                  pesanan: "{{pesanan_id}}",
+                  makanan: self.pesan_makanan[i],
+                  makanan_jumlah: jumlah,
+                  minuman: null,
+                  minuman_jumlah: 0
+                };
+                
+                document.getElementById("makanan"+self.pesan_makanan[i]).checked = false;
+                document.getElementById("makanan_jumlah"+self.pesan_makanan[i]).value = 1;
+                fetch(url_daftar_pesanan, {
+                      method: 'POST',
+                      body: JSON.stringify(data),
+                      headers:{
+                        'Content-Type': 'application/json',
+                        'Authorization': 'JWT ' + window.localStorage.getItem('token')
+                      }
+                    }).then(res => res.json())
+                    .then(response => {
+                        console.log(response);
+                        self.pesanan.daftar_pesanan.push(response);
+                    })
+                    .catch(error => console.error('Error:', error));
+
+                self.pesanan.bayar += (self.makanan.find(m => m.id == self.pesan_makanan[i]).harga * jumlah);
+              }
+            }
+
+            // add item minuman
+            if (self.pesan_minuman.length > 0) {
+              for(j=0; j < self.pesan_minuman.length; j++){
+                let jumlah = document.getElementById("minuman_jumlah"+self.pesan_minuman[j]).value;
+                let data = {
+                  pesanan: "{{pesanan_id}}",
+                  makanan: null,
+                  makanan_jumlah: 0,
+                  minuman: self.pesan_minuman[j],
+                  minuman_jumlah: jumlah
+                };
+
+                document.getElementById("minuman"+self.pesan_minuman[j]).checked = false;
+                document.getElementById("minuman_jumlah"+self.pesan_minuman[j]).value = 1;
+
+                fetch(url_daftar_pesanan, {
+                      method: 'POST',
+                      body: JSON.stringify(data),
+                      headers:{
+                        'Content-Type': 'application/json',
+                        'Authorization': 'JWT ' + window.localStorage.getItem('token')
+                      }
+                    }).then(res => res.json())
+                    .then(response => {
+                        console.log(response);
+                        self.pesanan.daftar_pesanan.push(response);
+                    })
+                    .catch(error => console.error('Error:', error));
+
+                self.pesanan.bayar += (self.minuman.find(m => m.id == self.pesan_minuman[j]).harga * jumlah);
+              }
+            }
+
+            // reset
+            self.pesan_makanan = [];
+            self.pesan_minuman = [];
+          },
+          delete: function(id){
+            const self = this;
+            fetch(url_daftar_pesanan+id+"/", {
+                  method: 'DELETE',
+                  headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': 'JWT ' + window.localStorage.getItem('token')
+                  }
+                }).then(res => {
+                  if (res.status == 204){
+                    dp = self.pesanan.daftar_pesanan.find(d => d.id == id);
+                    if (dp.makanan != null){
+                      makan = self.makanan.find(m => m.id == dp.makanan);
+                      self.pesanan.bayar -= (makan.harga * dp.makanan_jumlah);
+                    } else if(dp.minuman != null) {
+                      minum = self.minuman.find(m => m.id == dp.minuman);
+                      self.pesanan.bayar -= (minum.harga * dp.minuman_jumlah);
+                    }
+                    self.pesanan.daftar_pesanan = self.pesanan.daftar_pesanan.filter(dp => dp.id != id);
+                  }
+                })
+                .then(response => {
+                    
+                })
+                .catch(error => console.error('Error:', error));
+          },
+          // updateDP: function(id, jenis){
+          //   console.log('hai ' + jenis + ' ' + id);
+          // },
+          nama_makanan: function(id){
+            const self = this;
+            return self.makanan.find(m => m.id == id).nama;
+          },
+          nama_minuman: function(id){
+            const self = this;
+            return self.minuman.find(m => m.id == id).nama;
+          },
+          logout: function(){
+            window.localStorage.setItem('token', null);
+          }
+        }
+    })
+</script>
+{% endblock%}
+

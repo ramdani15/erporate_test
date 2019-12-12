@@ -1,0 +1,53 @@
+.pmb-breadcrumb {
+    margin-top: 24px;
+    text-align: right;
+}
+
+.wrapper-content .middle-box {
+    margin-top: 0;
+}
+
+.landing-page .carousel-caption {
+    color: #607D8B;
+    margin-top: 48px;
+}
+
+.landing-page .carousel-caption h1 {
+    margin-bottom: 24px;
+}
+
+.landing-page .navbar-default .navbar-nav > .active > a, .landing-page .navbar-default .navbar-nav > .active > a:hover {
+    color: #607D8B;
+}
+
+.landing-page .navbar-default .nav li a {
+    color: #607D8B;
+}
+
+.landing-page .navbar-default .navbar-nav > .active > a:focus {
+    color: #607D8B;
+}
+
+.landing-page .carousel-image img {
+    max-width: 270px;
+}
+
+.pagination {
+    margin: 0;
+}
+
+.penunjang a.hapus {
+    position: absolute;
+    color: #fff;
+    padding: 3px 5px;
+    background-color: #242424;
+    display: block;
+}
+
+.biaya-kuliah ol li {
+    padding-top: 6px;
+}
+
+.biaya-kuliah .nomor-tes {
+    letter-spacing: 4px;
+}

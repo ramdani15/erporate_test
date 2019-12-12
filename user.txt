@@ -1,0 +1,11 @@
+from core.models import Role
+
+User.objects.create_user(username='manager', password='123', role=Role.MANAGER)
+User.objects.create_user(username='kasir', password='123', role=Role.KASIR)
+User.objects.create_user(username='pelayan', password='123', role=Role.PELAYAN)
+
+Makanan.objects.create(nama='Nasi Puyung', harga=10000)
+Makanan.objects.create(nama='Bukan Nasi Puyung', harga=15000)
+
+Minuman.objects.create(nama='Jus Melon', harga=5000)
+Minuman.objects.create(nama='Jus Mangga', harga=5000)
