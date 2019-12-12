@@ -22,3 +22,10 @@ Pelayan
 username = pelayan
 password = 123
 ```
+
+## Installation
+
+```bash
+pipenv shell
+pipenv install
+```
