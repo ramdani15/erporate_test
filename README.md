@@ -1,4 +1,17 @@
-# erporate_test
+# Simple Cafe
+
+## Installation
+
+```bash
+pipenv shell
+pipenv install
+```
+
+## Run
+
+```bash
+./manage.py runserver
+```
 
 ## Role User
 
@@ -21,11 +34,4 @@ Pelayan
 ```bash
 username = pelayan
 password = 123
-```
-
-## Installation
-
-```bash
-pipenv shell
-pipenv install
 ```
